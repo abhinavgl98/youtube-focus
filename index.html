@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YouTube Focus — YouTube without the rabbit hole</title>
+<meta name="description" content="A distraction-free desktop app that shows only the creators you chose. No algorithm. No recommendations. No 3 AM regrets." />
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#111; --line:#1e1e1e; --line2:#2a2a2a;
+    --text:#fff; --muted:#8a8a8a; --dim:#555; --faint:#383838;
+    --accent:#ff2d55; --accent2:#7c3aed;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.5;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:inherit;text-decoration:none}
+
+  /* glow backdrop */
+  body::before{
+    content:"";position:fixed;top:-30%;left:50%;transform:translateX(-50%);
+    width:900px;height:900px;border-radius:50%;
+    background:radial-gradient(circle, rgba(124,58,237,.18), rgba(255,45,85,.10) 40%, transparent 70%);
+    filter:blur(40px);z-index:-1;pointer-events:none;
+  }
+
+  /* nav */
+  nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700}
+  .logo{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));font-size:15px}
+  .nav-cta{font-size:14px;color:var(--muted);border:1px solid var(--line2);
+    padding:8px 16px;border-radius:999px;transition:.15s}
+  .nav-cta:hover{color:#fff;border-color:#444}
+
+  /* hero */
+  .hero{text-align:center;padding:70px 0 60px}
+  .eyebrow{display:inline-block;font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);border:1px solid rgba(255,45,85,.3);background:rgba(255,45,85,.06);
+    padding:6px 14px;border-radius:999px;margin-bottom:28px;font-weight:600}
+  h1{font-size:clamp(38px,6vw,68px);line-height:1.05;font-weight:800;letter-spacing:-.02em}
+  h1 .grad{background:linear-gradient(120deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{max-width:620px;margin:24px auto 0;color:var(--muted);font-size:clamp(16px,2.4vw,20px)}
+
+  /* buttons */
+  .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:38px}
+  .btn{display:inline-flex;align-items:center;gap:10px;font-weight:600;font-size:15px;
+    padding:14px 26px;border-radius:14px;transition:.15s;border:1px solid transparent}
+  .btn-primary{background:#fff;color:#0a0a0a}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,255,255,.12)}
+  .btn-ghost{background:var(--panel);border-color:var(--line2);color:#fff}
+  .btn-ghost:hover{border-color:#444;transform:translateY(-2px)}
+  .btn small{display:block;font-size:11px;font-weight:500;opacity:.55;margin-top:1px}
+  .btn .soon{font-size:10px;background:var(--accent2);color:#fff;padding:2px 7px;
+    border-radius:999px;font-weight:700;letter-spacing:.04em}
+  .meta-note{margin-top:16px;font-size:13px;color:var(--faint)}
+
+  /* app mock */
+  .mock{margin:60px auto 0;max-width:760px;border:1px solid var(--line);border-radius:16px;
+    background:var(--panel);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .mock-bar{display:flex;gap:7px;padding:13px 16px;border-bottom:1px solid var(--line)}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .mock-body{padding:34px 30px}
+  .mock-h{font-size:22px;font-weight:700;margin-bottom:4px}
+  .mock-p{font-size:13px;color:var(--dim);margin-bottom:22px}
+  .row{display:flex;align-items:center;gap:14px;padding:15px;border:1px solid var(--line);
+    border-radius:14px;background:#0d0d0d;margin-bottom:10px;text-align:left}
+  .row .emo{font-size:20px}
+  .row b{font-size:14px}
+  .row span{display:block;font-size:11px;color:var(--faint);margin-top:2px}
+  .row .arr{margin-left:auto;color:var(--line2)}
+
+  /* sections */
+  section{padding:70px 0}
+  .kicker{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;text-align:center}
+  h2{font-size:clamp(28px,4vw,40px);font-weight:800;text-align:center;margin-top:10px;letter-spacing:-.01em}
+  .lead{max-width:600px;margin:16px auto 0;text-align:center;color:var(--muted);font-size:17px}
+
+  /* problem / solution */
+  .ps{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:48px}
+  .card{border:1px solid var(--line);border-radius:18px;padding:30px;background:var(--panel)}
+  .card.bad{border-color:rgba(255,45,85,.2)}
+  .card.good{border-color:rgba(124,58,237,.28)}
+  .card h3{font-size:18px;margin-bottom:14px;display:flex;align-items:center;gap:9px}
+  .card ul{list-style:none}
+  .card li{font-size:15px;color:var(--muted);padding:7px 0 7px 26px;position:relative}
+  .card.bad li::before{content:"✕";position:absolute;left:0;color:var(--accent);font-weight:700}
+  .card.good li::before{content:"✓";position:absolute;left:0;color:#a78bfa;font-weight:700}
+
+  /* features */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px}
+  .feat{border:1px solid var(--line);border-radius:16px;padding:26px;background:var(--panel);transition:.15s}
+  .feat:hover{border-color:var(--line2);transform:translateY(-3px)}
+  .feat .ic{font-size:24px;margin-bottom:14px}
+  .feat h4{font-size:16px;margin-bottom:7px}
+  .feat p{font-size:14px;color:var(--muted)}
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px}
+  .step{text-align:center;padding:26px}
+  .num{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;margin:0 auto 16px;
+    font-weight:800;background:linear-gradient(135deg,rgba(255,45,85,.15),rgba(124,58,237,.15));
+    border:1px solid var(--line2)}
+  .step h4{font-size:16px;margin-bottom:6px}
+  .step p{font-size:14px;color:var(--muted)}
+
+  /* download band */
+  .band{border:1px solid var(--line);border-radius:24px;padding:56px 30px;text-align:center;
+    background:linear-gradient(180deg,#121212,#0d0d0d);margin:20px 0}
+  .band h2{font-size:clamp(26px,4vw,38px)}
+  .band .lead{margin-bottom:34px}
+
+  footer{border-top:1px solid var(--line);padding:34px 0;text-align:center;color:var(--faint);font-size:13px}
+  footer .brand{justify-content:center;margin-bottom:12px;color:var(--dim)}
+
+  @media(max-width:720px){
+    .ps,.grid,.steps{grid-template-columns:1fr}
+    .hero{padding:48px 0 40px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav>
+    <div class="brand"><span class="logo">▶</span> YouTube Focus</div>
+    <a href="#download" class="nav-cta">Download</a>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <span class="eyebrow">Environment &gt; Willpower</span>
+    <h1>YouTube, without<br/>the <span class="grad">rabbit hole.</span></h1>
+    <p class="sub">A distraction-free desktop app that shows only the creators <em>you</em> chose — their last 14 days, nothing else. No algorithm. No recommendations. No 3&nbsp;AM regrets.</p>
+    <div class="cta-row">
+      <a href="#download" class="btn btn-primary">
+        <span>🍎</span><div>Download for Mac<small>Apple Silicon · .dmg</small></div>
+      </a>
+      <a href="#download" class="btn btn-ghost">
+        <span>🪟</span><div>Windows<small>.exe installer</small></div>
+        <span class="soon">SOON</span>
+      </a>
+    </div>
+    <p class="meta-note">Free &amp; open source · ~6 MB · No account, no tracking</p>
+
+    <!-- APP MOCK -->
+    <div class="mock">
+      <div class="mock-bar">
+        <span class="dot" style="background:#ff5f57"></span>
+        <span class="dot" style="background:#febc2e"></span>
+        <span class="dot" style="background:#28c840"></span>
+      </div>
+      <div class="mock-body">
+        <div class="mock-h">What are you focusing on?</div>
+        <div class="mock-p">Only your curated creators. No algorithm.</div>
+        <div class="row"><span class="emo">📱</span><div><b>Social Media</b><span>Ben Heath · Neil Patel · HubSpot</span></div><span class="arr">→</span></div>
+        <div class="row"><span class="emo">⚡</span><div><b>Tech</b><span>Fireship · Linus Tech Tips</span></div><span class="arr">→</span></div>
+        <div class="row"><span class="emo">💼</span><div><b>Business</b><span>Acquired · Y Combinator</span></div><span class="arr">→</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PROBLEM / SOLUTION -->
+  <section>
+    <div class="kicker">The problem</div>
+    <h2>You came for one video.</h2>
+    <p class="lead">You opened YouTube to watch one thing. The algorithm handed you twenty more. An hour disappeared — and you didn't even choose any of it.</p>
+    <div class="ps">
+      <div class="card bad">
+        <h3>😵‍💫 Regular YouTube</h3>
+        <ul>
+          <li>Endless recommendations engineered to hook you</li>
+          <li>Shorts, comments, and sidebars everywhere</li>
+          <li>The homepage decides what you watch</li>
+          <li>One video turns into an hour</li>
+        </ul>
+      </div>
+      <div class="card good">
+        <h3>🎯 YouTube Focus</h3>
+        <ul>
+          <li>Only the creators you deliberately chose</li>
+          <li>Just their last 14 days — then you're done</li>
+          <li>A clean player: no sidebar, no comments</li>
+          <li>The algorithm never gets a vote</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <div class="kicker">How it works</div>
+    <h2>Three taps. Zero noise.</h2>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><h4>Pick a category</h4><p>Group your creators into focuses like Tech, Business, or Social Media.</p></div>
+      <div class="step"><div class="num">2</div><h4>See fresh uploads</h4><p>Only the last 14 days from your 3–5 curated channels. Shorts filtered out.</p></div>
+      <div class="step"><div class="num">3</div><h4>Watch & leave</h4><p>A clean, full-screen player. When the list ends, so does your session.</p></div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section>
+    <div class="kicker">Why it's different</div>
+    <h2>Built to be closed.</h2>
+    <div class="grid">
+      <div class="feat"><div class="ic">🚫</div><h4>No algorithm</h4><p>Nothing from YouTube's recommendation engine ever appears. Ever.</p></div>
+      <div class="feat"><div class="ic">🗂️</div><h4>Your categories</h4><p>Add or remove categories and channels right inside the app.</p></div>
+      <div class="feat"><div class="ic">🎬</div><h4>Clean player</h4><p>No sidebar, no comments, no "up next." Just the video.</p></div>
+      <div class="feat"><div class="ic">📵</div><h4>No Shorts</h4><p>Reels and Shorts are automatically detected and hidden.</p></div>
+      <div class="feat"><div class="ic">🔒</div><h4>Private</h4><p>No login, no API keys, no tracking. Your list stays on your machine.</p></div>
+      <div class="feat"><div class="ic">⚡</div><h4>Fast & tiny</h4><p>A native ~6 MB desktop app built with Tauri. Opens instantly.</p></div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section id="download">
+    <div class="band">
+      <div class="kicker">Get it now</div>
+      <h2>Reclaim your attention.</h2>
+      <p class="lead">Download the app, curate your creators, and turn YouTube into a tool again.</p>
+      <div class="cta-row">
+        <a href="YouTube-Focus-0.1.0-arm64.dmg" class="btn btn-primary" download>
+          <span>🍎</span><div>Download for Mac<small>Apple Silicon · .dmg</small></div>
+        </a>
+        <a href="#" class="btn btn-ghost">
+          <span>🪟</span><div>Windows<small>.exe installer</small></div>
+          <span class="soon">SOON</span>
+        </a>
+      </div>
+      <p class="meta-note">macOS app is unsigned — right-click → Open the first time.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="brand"><span class="logo">▶</span> YouTube Focus</div>
+    Environment &gt; Willpower · Built with Tauri + React
+  </footer>
+
+</div>
+</body>
+</html>

@@ -47,7 +47,7 @@
   const values = () => Object.fromEntries(new FormData(form));
 
   async function refreshPlain() {
-    const ctx = await Q.createSignContext(values());
+    const ctx = await Q.createSignContext({ ...values(), assetsUrl: 'assets/' });
     document.getElementById('plainQr').src = ctx.data.qr;
   }
   form.addEventListener('input', refreshPlain);
@@ -62,8 +62,7 @@
   document.getElementById('more').addEventListener('click', () => {
     Q.openSignPicker({
       ...values(),
-      fontBaseUrl: 'fonts/',
-      // "Edit in Canva" saves an editable PDF and shows how to open it in Canva.
+      assetsUrl: 'assets/', // the folder that holds fonts/ and images/
     });
   });
 </script>

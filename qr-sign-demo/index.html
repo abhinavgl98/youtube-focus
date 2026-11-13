@@ -63,10 +63,7 @@
     Q.openSignPicker({
       ...values(),
       fontBaseUrl: 'fonts/',
-      // In the app this is: canvaEndpoint: '/api/qr-signs/canva/edit'
-      onEdit: async ({ templateId, paletteIndex }) => {
-        toast(`Demo: the app would now import "${templateId}" (colour ${paletteIndex + 1}) into Canva and open the editor.`);
-      },
+      // "Edit in Canva" saves an editable PDF and shows how to open it in Canva.
     });
   });
 </script>
